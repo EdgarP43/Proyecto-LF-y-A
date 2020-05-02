@@ -13,8 +13,9 @@ import java.util.Deque;
  * @author Edgar
  */
 public class PostFix {
+
     private static int precedence(char operator) {
-        switch(operator) {
+        switch (operator) {
             case '.':
                 return 2;
             case '|':
@@ -26,38 +27,47 @@ public class PostFix {
 
     public String infixToPostfix(String infixRegex) {
         Deque<Character> stack = new ArrayDeque<Character>();
-
+        int quote_counter = 0;
         String postfixRegex = "";
-        for(int i = 0; i < infixRegex.length(); i++) {
+        for (int i = 0; i < infixRegex.length(); i++) {
             char c = infixRegex.charAt(i);
-            switch(c) {
-                case '.':
-                    while(!stack.isEmpty() && precedence(c) <= precedence(stack.peek())) {
-                        postfixRegex += stack.removeFirst();
-                    }
-                    stack.addFirst(c);
-                    break;
-                case '|':
-                    while(!stack.isEmpty() && precedence(c) <= precedence(stack.peek())) {
-                        postfixRegex += stack.removeFirst();
-                    }
-                    stack.addFirst(c);
-                    break;
-                case '(':
-                    stack.addFirst(c);
-                    break;
-                case ')':
-                    while(!stack.isEmpty() && stack.peek() != '(') {
-                        postfixRegex += stack.removeFirst();
-                    }
-                    stack.removeFirst();
-                    break;
-                default:
-                    postfixRegex += c;
+
+            if (c == '\'') {
+                quote_counter++;
             }
+            if (quote_counter % 2 == 0) {
+                switch (c) {
+                    case '.':
+                        while (!stack.isEmpty() && precedence(c) <= precedence(stack.peek())) {
+                            postfixRegex += stack.removeFirst();
+                        }
+                        stack.addFirst(c);
+                        break;
+                    case '|':
+                        while (!stack.isEmpty() && precedence(c) <= precedence(stack.peek())) {
+                            postfixRegex += stack.removeFirst();
+                        }
+                        stack.addFirst(c);
+                        break;
+                    case '(':
+                        stack.addFirst(c);
+                        break;
+                    case ')':
+                        while (!stack.isEmpty() && stack.peek() != '(') {
+                            postfixRegex += stack.removeFirst();
+                        }
+                        stack.removeFirst();
+                        break;
+                    default:
+                        postfixRegex += c;
+                }
+            } else {
+                postfixRegex += c;
+            }
+
         }
 
-        while(!stack.isEmpty()) {
+        while (!stack.isEmpty()) {
             postfixRegex += stack.removeFirst();
         }
 
