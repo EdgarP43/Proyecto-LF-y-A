@@ -6,8 +6,11 @@
 package Classes;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 
 /**
@@ -15,6 +18,7 @@ import java.util.ArrayList;
  * @author Edgar
  */
 public class FileManager {
+
     boolean foundSet = false;
     boolean lookingForSet = false;
     int sets_mark = 0, tokens_mark, actions_mark;
@@ -36,8 +40,15 @@ public class FileManager {
         return actions_mark;
     }
 
-    public String[] readFile(String name) {
-        File file = new File(name);
+    /**
+     * Method to read a file line by line and keep every line in different
+     * positions into an array
+     *
+     * @param name name of the file
+     * @return array of the lines
+     */
+    public String[] readAutomatonFile(String name) {
+        File file = new File("C:\\Users\\Edgar\\Desktop\\New folder\\"+name+".txt");
 
         int count = 0;
         try {
@@ -90,6 +101,40 @@ public class FileManager {
         return split;
     }
 
+    public boolean writeFile(String file_name, String content, String error, String root, String ext) {
+        File file = new File(root + file_name + "." + ext);
+        if (file.exists()) {
+            deleteFile(root + file_name + "." + ext);
+        }
+
+        try {
+            FileWriter fw = new FileWriter(file, true);
+            BufferedWriter bw = new BufferedWriter(fw);
+            bw.write(content);
+            bw.close();
+            fw.close();
+
+            return true;
+        } catch (IOException ex) {
+            error = ex.getMessage();
+            return false;
+        }
+    }
+
+    private boolean deleteFile(String file_name) {
+        File file = new File(file_name);
+        try {
+            file.delete();
+            file.createNewFile();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Method to replace every space that shows in the text file
+     */
     private void replaceSpaces() {
         int index = 0;
         while (index < split.length) {
@@ -104,11 +149,12 @@ public class FileManager {
 
                 if (char_value == 9) {
                     new_chain += "";
-                }
+                }//Validates that the char is a quote, raises the count
                 else if (char_value == 39) {
                     quote_counter++;
                     new_chain += s_character;
                 } else if (char_value == 32) {
+                    //Validates if the count its a pair number to replace the 
                     if (quote_counter % 2 == 0) {
                         new_chain += "";
                     } else {
@@ -132,6 +178,9 @@ public class FileManager {
         }
     }
 
+    /**
+     * Method to call all the validations methods
+     */
     private void makeValidations() {
         validateSets();
         validateTokens();
@@ -139,6 +188,9 @@ public class FileManager {
 
     }
 
+    /**
+     * Method to validate that all the syntax in the sets section it's correct
+     */
     private void validateSets() {
 
         int index = sets_mark + 1;
@@ -154,7 +206,7 @@ public class FileManager {
             String prev_value = "";
             String aux = "";
             String temp_set_name = "";
-            while (position < split[index].length()) { 
+            while (position < split[index].length()) {
                 if (!split[index].equals("")) {
                     char character = split[index].charAt(position);
                     String s_character = String.valueOf(character);
@@ -162,6 +214,7 @@ public class FileManager {
 
                     if (!fullname) {
                         if (position == 0) {
+                            //Validate that the name starts with a letter
                             if (!(char_value >= 65 && char_value <= 90)
                                     && !(char_value >= 97 && char_value <= 122)) {
                                 error = "ERROR = line: " + (index + 1) + ", the set name has to start with a letter";
@@ -171,6 +224,8 @@ public class FileManager {
                                 set_name = true;
                             }
                         } else {
+
+                            //Finds the '=' symbol to know the name is complete  
                             if (char_value == 61) {
                                 fullname = true;
 
@@ -178,6 +233,7 @@ public class FileManager {
                                     error = "ERROR = line: " + (index + 1) + ", the set doesn't has an identifier";
                                     break;
                                 } else {
+                                    //Validate if the set name already exists
                                     if (sets.contains(temp_set_name)) {
                                         error = "ERROR = line: " + (index + 1) + ", the set name already exists";
                                         break;
@@ -185,6 +241,7 @@ public class FileManager {
                                         sets.add(temp_set_name);
                                     }
                                 }
+                                //The set name only can have letters and numbers
                             } else if (!(char_value >= 65 && char_value <= 90)
                                     && !(char_value >= 97 && char_value <= 122)
                                     && !(char_value >= 48 && char_value <= 57)) {
@@ -196,6 +253,7 @@ public class FileManager {
                             }
                         }
                     } else {
+                        //Quotes and points count
                         if (s_character.equals("'")) {
                             quote_counter++;
                         } else if (s_character.equals(".") && (quote_counter % 2 == 0)) {
@@ -205,6 +263,7 @@ public class FileManager {
                         }
 
                         if (quote_counter % 2 == 0) {
+                            //Validate ranges
                             if (position < split[index].length() - 1) {
                                 if (String.valueOf(split[index].charAt(position + 1)).equals("'")
                                         && prev.equals("'") && s_character.equals("'")) {
@@ -288,11 +347,15 @@ public class FileManager {
         }
     }
 
+    /**
+     * Method to validate that all the syntax in the token section it's correct
+     */
     private void validateTokens() {
         String error = "";
         int index = tokens_mark + 1;
         while (index < actions_mark) {
             if (!split[index].equals("")) {
+                //The token line has the identifier 'Token' as the first 5 positions
                 if (split[index].substring(0, 5).toUpperCase().equals("TOKEN")) {
                     int position = 5;
                     boolean fullname = false;
@@ -309,10 +372,15 @@ public class FileManager {
                             char character = split[index].charAt(position);
                             String s_character = String.valueOf(character);
                             int char_value = Integer.valueOf(character);
+
+                            //Validates if the identifier of the token is complete
                             if (!fullname) {
+                                /*Validates the rest of the identifier, starting for the
+                        token number*/
                                 if ((char_value >= 48 && char_value <= 57)) {
                                     number = true;
                                     num += s_character;
+                                    //Finds the '=' symbol to know the name is complete    
                                 } else if (char_value == 61) {
                                     fullname = true;
 
@@ -338,6 +406,7 @@ public class FileManager {
                                 if (s_character.equals("'")) {
                                     quote_counter++;
                                 }
+                                //Is the first character from the expression
                                 if (first) {
                                     if ((char_value != 39 && char_value != 40) && isExpressionSymbol(s_character)) {
                                         error = "ERROR = line: " + (index + 1) + ", column: " + (position + 1) + ", the expression can't start with an operation symbol";
@@ -366,6 +435,9 @@ public class FileManager {
                                             break;
                                         }
                                     } else {
+                                        /*If it doesn't looks for a set it will work with the previous char:
+                                Validates if both are proper symbols of the regular expression and won't send an
+                                error only if the symbol is '('*/
                                         if (isExpressionSymbol2(s_character) && isExpressionSymbol2(prev) && (quote_counter % 2 == 0)) {
                                             if (!prev.equals("(") && !prev.equals(")")) {
                                                 if (!s_character.equals("(") && !s_character.equals(")")) {

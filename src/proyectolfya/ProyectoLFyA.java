@@ -19,7 +19,7 @@ public class ProyectoLFyA {
     public static void main(String[] args) {
         // TODO code application logic here
         Automata archivo;
-        archivo = new Automata("C:\\Users\\Edgar\\Desktop\\New folder\\Archivo Prueba.txt");
+        archivo = new Automata("archivo 19");
         System.out.println(archivo.getPrintText());
     }
     
